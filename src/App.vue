@@ -29,45 +29,49 @@
 				<div class="row">
 					<div class="col-2 vstack gap-3 p-3">
 						<h3>Pump</h3>
-						<button class="btn" :class="{ 'btn-success': state.status, 'btn-outline-success': !state.status}" @click="SetStatus">Sensor #1 {{ state.status ? 'ON' : 'OFF' }}</button>
-						<button class="btn" :class="{ 'btn-success': state.status, 'btn-outline-success': !state.status}" @click="SetStatus">Sensor #2 {{ state.status ? 'ON' : 'OFF' }}</button>
-						<button class="btn" :class="{ 'btn-success': state.status, 'btn-outline-success': !state.status}" @click="SetStatus">Sensor #3 {{ state.status ? 'ON' : 'OFF' }}</button>
-						<button class="btn" :class="{ 'btn-success': state.status, 'btn-outline-success': !state.status}" @click="SetStatus">Sensor #4 {{ state.status ? 'ON' : 'OFF' }}</button>
+						<button class="btn" :class="valve_1_active ? 'btn-success' : 'btn-outline-success'" value="valve_1_active" @click="setStatus($event)">Valve #1</button>
+						<button class="btn" :class="valve_2_active ? 'btn-success' : 'btn-outline-success'" value="valve_2_active" @click="setStatus($event)">Valve #2</button>
+						<button class="btn" :class="valve_3_active ? 'btn-success' : 'btn-outline-success'" value="valve_3_active" @click="setStatus($event)">Valve #3</button>
+						<button class="btn" :class="valve_4_active ? 'btn-success' : 'btn-outline-success'" value="valve_4_active" @click="setStatus($event)">Valve #4</button>
 					</div>
 					<div class="col-2 vstack gap-3 p-3">
 						<h3>Release</h3>
-						<button class="btn" :class="{ 'btn-success': state.status, 'btn-outline-success': !state.status}" @click="SetStatus">Sensor #1 {{ state.status ? 'ON' : 'OFF' }}</button>
-						<button class="btn" :class="{ 'btn-success': state.status, 'btn-outline-success': !state.status}" @click="SetStatus">Sensor #2 {{ state.status ? 'ON' : 'OFF' }}</button>
-						<button class="btn" :class="{ 'btn-success': state.status, 'btn-outline-success': !state.status}" @click="SetStatus">Sensor #3 {{ state.status ? 'ON' : 'OFF' }}</button>
-						<button class="btn" :class="{ 'btn-success': state.status, 'btn-outline-success': !state.status}" @click="SetStatus">Sensor #4 {{ state.status ? 'ON' : 'OFF' }}</button>
+						<button class="btn" :class="release_1_active ? 'btn-success' : 'btn-outline-success'" value="release_1_active" @click="setStatus($event)">Release #1</button>
+						<button class="btn" :class="release_2_active ? 'btn-success' : 'btn-outline-success'" value="release_2_active" @click="setStatus($event)">Release #2</button>
+						<button class="btn" :class="release_3_active ? 'btn-success' : 'btn-outline-success'" value="release_3_active" @click="setStatus($event)">Release #3</button>
+						<button class="btn" :class="release_4_active ? 'btn-success' : 'btn-outline-success'" value="release_4_active" @click="setStatus($event)">Release #4</button>
 					</div>
 					<div class="col-4 p-3 d-flex justify-content-center">
 						<div>
 							<h3 class="d-flex justify-content-center">Power</h3>
 							<vue-gauge :refid="'type-unique-id-1'" :options="gaugeOptions" :key="gaugeValue"></vue-gauge>
-						</div>
-						<div>
 							<h3 class="d-flex justify-content-center">Tank</h3>
 							<vue-gauge :refid="'type-unique-id-2'" :options="gaugeOptions" :key="gaugeValue"></vue-gauge>
+						</div>
+						<div>
+							
 						</div>
 					</div>
 					<div class="col-4">
 						<h3 class="d-flex justify-content-center">Back log</h3>
 						<div class="chat-box">
-							<div 
-								v-for="message in historyData" 
-								:key="message.key"
-								class="message current-user">
-								<div class="message-inner">
-									<div class="username">{{ message.username }}</div>
+							<div v-if="backlogData.length != 0">
+								<div 
+									v-for="data in backlogData" 
+									:key="data.key"
+									class="message">
+									<div class="message-inner">
+										<div class="content">{{ data.username }} modified at {{ data.modifiedAt }} action with {{ data.actionWith }}</div>
+									</div>
 								</div>
 							</div>
+							<div v-else><h3>NO DATA</h3></div>
 						</div>
 					</div>
 				</div>
 			</section>
 
-			<section class="chat-box">
+			<section class="chat-box chat-overflow">
 				<div 
 					v-for="message in state.messages" 
 					:key="message.key" 
@@ -98,12 +102,32 @@
 import { reactive, onMounted, ref } from 'vue';
 import db from './db';
 import VueGauge from 'vue-gauge';
+import moment from 'moment';
 
 export default {
 	components: { VueGauge },
 	data() {
 		return {
-			gaugeValue: 0
+			gaugeValue: 0,
+			valveReleaseList: [
+				"valve_1_active",
+				"valve_2_active",
+				"valve_3_active",
+				"valve_4_active",
+				"release_1_active",
+				"release_2_active",
+				"release_3_active",
+				"release_4_active",
+			],
+			backlog: [],
+			valve_1_active: false,
+			valve_2_active: false,
+			valve_3_active: false,
+			valve_4_active: false,
+			release_1_active: false,
+			release_2_active: false,
+			release_3_active: false,
+			release_4_active: false
 		}
 	},
 	computed: {
@@ -125,42 +149,84 @@ export default {
 				centralLabel: this.gaugeValue.toString(),
 			}
 		},
-		historyData() {
-			return this.state.messages.slice(1).slice(-5);
+		backlogData() {
+			return this.backlog.length < 5 ? this.backlog : this.backlog.slice(1).slice(-5);
 		}
 	},
+	mounted() {
+		const backlogRef = db.database().ref("backlog");
+		backlogRef.on('value', snapshot => {
+			const data = snapshot.val() ?? "";
+			let backlog = [];
+			Object.keys(data).forEach(key => {
+			backlog.push({
+				id: key,
+				username: data[key].username,
+				actionWith: data[key].actionWith,
+				modifiedAt: data[key].modifiedAt
+			});
+			});
+			this.backlog = backlog;
+		});
+
+		this.valveReleaseList.forEach(el => {
+			const elRef = db.database().ref(el);
+			elRef.on('value', snapshot => {
+				const data = snapshot.val() ?? "";
+				let backlog = [];
+				Object.keys(data).forEach(key => {
+					backlog.push({
+						id: key,
+						username: data[key].username,
+						status: data[key].status
+					});
+				});
+				this[el] = backlog.pop()?.status ?? false;
+			});
+		})
+	},
+	methods: {
+		setStatus(e) {
+			this[e.target.value] = !this[e.target.value];
+			var current = moment().format("DD/MM/YYYY hh:mm:ss a").toString();
+			const statusRef = db.database().ref(e.target.value.toString());
+			const status = {
+				username: this.state.username,
+				status: this[e.target.value],
+				modifiedAt: current
+			}
+			statusRef.push(status);
+			this.saveBacklog(e.target.innerHTML.toString(), current);
+		},
+		saveBacklog(actionWith, current) {
+			const logRef = db.database().ref("backlog");
+			const log = {
+				username: this.state.username,
+				actionWith: actionWith,
+				modifiedAt: current
+			}
+			logRef.push(log);
+		}
+	},
+	//
 	setup() {
 		const inputUsername = ref("");
 		const inputMessage = ref("");
 
 		const state = reactive({
-		username: "",
-		messages: [],
-		status: false
+			username: "",
+			messages: []
 		});
 
 		const Login = () => {
-		if (inputUsername.value != "" || inputUsername.value != null) {
-			state.username = inputUsername.value;
-			inputUsername.value = "";
-			statusLoad();
-		}
+			if (inputUsername.value != "" || inputUsername.value != null) {
+				state.username = inputUsername.value;
+				inputUsername.value = "";
+			}
 		}
 
 		const Logout = () => {
-		state.username = "";
-		}
-
-		const SetStatus = () => {
-		state.status = !state.status;
-		const statusRef = db.database().ref("status");
-
-		const userStatus = {
-			username: state.username,
-			status: state.status
-		}
-
-		statusRef.push(userStatus);
+			state.username = "";
 		}
 
 		const SendMessage = () => {
@@ -176,50 +242,32 @@ export default {
 		}
 
 		messagesRef.push(message);
-		inputMessage.value = "";
+			inputMessage.value = "";
 		}
 
 		onMounted(() => {
-		const messagesRef = db.database().ref("messages");
-		messagesRef.on('value', snapshot => {
-			const data = snapshot.val() ?? "";
-			let messages = [];
-			Object.keys(data).forEach(key => {
-			messages.push({
-				id: key,
-				username: data[key].username,
-				content: data[key].content
+			const messagesRef = db.database().ref("messages");
+			messagesRef.on('value', snapshot => {
+				const data = snapshot.val() ?? "";
+				let messages = [];
+				Object.keys(data).forEach(key => {
+				messages.push({
+					id: key,
+					username: data[key].username,
+					content: data[key].content
+				});
+				});
+				state.messages = messages;
 			});
-			});
-			state.messages = messages;
 		});
-		});
-
-		const statusLoad = () => { 
-		const statusRef = db.database().ref("status");
-		statusRef.on('value', snapshot => {
-			const data = snapshot.val() ?? "";
-			let status = [];
-			Object.keys(data).forEach(key => {
-			status.push({
-				id: key,
-				status: data[key].status
-			});
-			});
-
-			const finalStatus = status.pop();
-			state.status = finalStatus ? finalStatus.status : false;
-		});
-		}
 
 		return {
-		inputUsername,
-		Login,
-		state,
-		inputMessage,
-		SendMessage,
-		Logout,
-		SetStatus
+			inputUsername,
+			Login,
+			state,
+			inputMessage,
+			SendMessage,
+			Logout
 		}
 	}
 }
@@ -411,6 +459,11 @@ export default {
 				}
 			}
 
+			.chat-overflow {
+			max-height: 500px;
+            overflow:auto;
+			}
+
 			footer {
 				position: sticky;
 				bottom: 0px;
@@ -505,4 +558,3 @@ export default {
 
 	@import'~bootstrap/dist/css/bootstrap.css'
 </style>
-  
