@@ -43,13 +43,11 @@
 					</div>
 					<div class="col-4 p-3 d-flex justify-content-center">
 						<div>
-							<h3 class="d-flex justify-content-center">Power</h3>
-							<vue-gauge :refid="'type-unique-id-1'" :options="gaugeOptions" :key="gaugeValue"></vue-gauge>
-							<h3 class="d-flex justify-content-center">Tank</h3>
-							<vue-gauge :refid="'type-unique-id-2'" :options="gaugeOptions" :key="gaugeValue"></vue-gauge>
-						</div>
-						<div>
-							
+							<h3 class="d-flex justify-content-center">Pump Power</h3>
+							<vue-gauge :refid="'type-unique-id-1'" :options="pumpOptions" :key="pumpValue"></vue-gauge>
+							<button type="button" class="btn btn-danger" v-if="this.overHeat" @click="emergencyAction()">Over heat! - Shut down system</button>
+							<h3 class="d-flex justify-content-center">Release Power</h3>
+							<vue-gauge :refid="'type-unique-id-2'" :options="releaseOptions" :key="releaseValue"></vue-gauge>
 						</div>
 					</div>
 					<div class="col-4">
@@ -103,12 +101,12 @@ import { reactive, onMounted, ref } from 'vue';
 import db from './db';
 import VueGauge from 'vue-gauge';
 import moment from 'moment';
+import ToastPlugin from 'vue-toast-notification';
 
 export default {
 	components: { VueGauge },
 	data() {
 		return {
-			gaugeValue: 0,
 			valveReleaseList: [
 				"valve_1_active",
 				"valve_2_active",
@@ -127,14 +125,32 @@ export default {
 			release_1_active: false,
 			release_2_active: false,
 			release_3_active: false,
-			release_4_active: false
+			release_4_active: false,
+			defaultPowerPercent: 25,
+			overHeat: false
 		}
 	},
 	computed: {
-		gaugeOptions() {
+		backlogData() {
+			return this.backlog.length < 5 ? this.backlog : this.backlog.slice(1).slice(-5);
+		},
+		pumpValue() {
+			let result = 0;
+			let totalPumpActive = 0;
+			this.valveReleaseList.forEach(e => {
+				if (e.includes("valve") && this[e]) {
+					totalPumpActive ++;
+				}
+			})
+
+			result = this.defaultPowerPercent * totalPumpActive;
+
+			return result;
+		},
+		pumpOptions() {
 			return {
 				hasNeedle: true,
-				needleValue: this.gaugeValue,
+				needleValue: this.pumpValue,
 				needleColor: 'black',
 				arcColors: [
 				'rgb(61, 204, 91)',
@@ -145,12 +161,40 @@ export default {
 				arcDelimiters: [25, 50, 75],
 				rangeLabel: ['0', '100'],
 				arcOverEffect: false,
-				needleStartValue: this.gaugeValue,
-				centralLabel: this.gaugeValue.toString(),
+				needleStartValue: this.pumpValue,
+				centralLabel: this.pumpValue.toString(),
 			}
 		},
-		backlogData() {
-			return this.backlog.length < 5 ? this.backlog : this.backlog.slice(1).slice(-5);
+		releaseValue() {
+			let result = 0;
+			let totalReleaseActive = 0;
+			this.valveReleaseList.forEach(e => {
+				if (e.includes("release") && this[e]) {
+					totalReleaseActive ++;
+				}
+			})
+
+			result = this.defaultPowerPercent * totalReleaseActive;
+
+			return result;
+		},
+		releaseOptions() {
+			return {
+				hasNeedle: true,
+				needleValue: this.releaseValue,
+				needleColor: 'black',
+				arcColors: [
+				'rgb(61, 204, 91)',
+				'rgb(239, 214, 19)',
+				'rgb(255,165,0)',
+				'rgb(255, 84, 84)',
+				],
+				arcDelimiters: [25, 50, 75],
+				rangeLabel: ['0', '100'],
+				arcOverEffect: false,
+				needleStartValue: this.releaseValue,
+				centralLabel: this.releaseValue.toString(),
+			}
 		}
 	},
 	mounted() {
@@ -185,18 +229,30 @@ export default {
 			});
 		})
 	},
+	watch: {
+		pumpValue() {
+			if (this.pumpValue === 100) {
+				this.overHeat = true;
+			}
+			else {
+				this.overHeat = false;
+			}
+		}
+	},
 	methods: {
-		setStatus(e) {
-			this[e.target.value] = !this[e.target.value];
+		setStatus(e, bulkAction = false) {
+			if (!bulkAction) {
+				this[e.target.value] = !this[e.target.value];
+			}
 			var current = moment().format("DD/MM/YYYY hh:mm:ss a").toString();
-			const statusRef = db.database().ref(e.target.value.toString());
+			const statusRef = db.database().ref(bulkAction ? e : e.target.value.toString());
 			const status = {
 				username: this.state.username,
-				status: this[e.target.value],
+				status: this[bulkAction ? e : e.target.value],
 				modifiedAt: current
 			}
 			statusRef.push(status);
-			this.saveBacklog(e.target.innerHTML.toString(), current);
+			this.saveBacklog(bulkAction ? e : e.target.innerHTML.toString(), current);
 		},
 		saveBacklog(actionWith, current) {
 			const logRef = db.database().ref("backlog");
@@ -206,9 +262,21 @@ export default {
 				modifiedAt: current
 			}
 			logRef.push(log);
+		},
+		emergencyAction() {
+			this.valveReleaseList.forEach(e => {
+				if (e.includes("valve")) {
+					this[e] = false;
+					this.setStatus(e, true);
+				}
+
+				if (e.includes("release")) {
+					this[e] = true;
+					this.setStatus(e, true);
+				}
+			});
 		}
 	},
-	//
 	setup() {
 		const inputUsername = ref("");
 		const inputMessage = ref("");
