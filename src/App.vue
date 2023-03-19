@@ -1,151 +1,186 @@
+<!-- eslint-disable no-mixed-spaces-and-tabs -->
 <template>
-  <div class="view login" v-if="state.username === '' || state.username === null">
-    <form class="login-form"  @submit.prevent="Login">
-      <div class="form-inner">
-        <h1>Login to SCADA data live data</h1>
-        <label for="username">Username</label>
-        <input 
-          type="text" 
-          v-model="inputUsername" 
-          placeholder="Please enter your username..." />
-        <input 
-          type="submit" 
-          value="Login" />
-      </div>
-    </form>
-  </div>
+	<div class="view login" v-if="state.username === '' || state.username === null">
+	  <form class="login-form"  @submit.prevent="Login">
+		<div class="form-inner">
+		  <h1>Login to SCADA data live data</h1>
+		  <label for="username">Username</label>
+		  <input 
+			type="text" 
+			v-model="inputUsername" 
+			placeholder="Please enter your username..." />
+		  <input 
+			type="submit" 
+			value="Login" />
+		</div>
+	  </form>
+	</div>
+  
+	<div class="view chat" v-else>
+	  <header>
+		  <button class="logout" @click="Logout">Logout</button>
+		  <h1>Welcome, {{ state.username }}</h1>
+	  </header>
+	  
+	  <section class="chat-box">
+		<button class="btn" :class="{'active': state.status}" @click="SetStatus">Sensor #1 {{ state.status ? 'ON' : 'OFF' }}</button>
+		  <input 
+			type="number" 
+			v-model="gaugeValue" />
+		  <vue-gauge :refid="'type-unique-id'" :options="gaugeOptions" :key="gaugeValue"></vue-gauge>
+	  </section>
 
-  <div class="view chat" v-else>
-    <header>
-      <button class="logout" @click="Logout">Logout</button>
-      <h1>Welcome, {{ state.username }}</h1>
-      <button class="btn" :class="{'active': state.status}" @click="SetStatus">Sensor #1 {{ state.status ? 'ON' : 'OFF' }}</button>
-	</header>
-    
-    <section class="chat-box">
-      <div 
-        v-for="message in state.messages" 
-        :key="message.key" 
-        :class="(message.username == state.username ? 'message current-user' : 'message')">
-        <div class="message-inner">
-          <div class="username">{{ message.username }}</div>
-          <div class="content">{{ message.content }}</div>
-        </div>
-      </div>
-    </section>
-
-    <footer>
-      <form @submit.prevent="SendMessage">
-        <input 
-          type="text" 
-          v-model="inputMessage" 
-          placeholder="Write a message..." />
-        <input 
-          type="submit" 
-          value="Send" />
-      </form>
-    </footer>
-  </div>
+	  <section class="chat-box">
+		<div 
+		  v-for="message in state.messages" 
+		  :key="message.key" 
+		  :class="(message.username == state.username ? 'message current-user' : 'message')">
+		  <div class="message-inner">
+			<div class="username">{{ message.username }}</div>
+			<div class="content">{{ message.content }}</div>
+		  </div>
+		</div>
+	  </section>
+  
+	  <footer>
+		<form @submit.prevent="SendMessage">
+		  <input 
+			type="text" 
+			v-model="inputMessage" 
+			placeholder="Write a message..." />
+		  <input 
+			type="submit" 
+			value="Send" />
+		</form>
+	  </footer>
+	</div>
 </template>
 
 <script>
 import { reactive, onMounted, ref } from 'vue';
 import db from './db';
+import VueGauge from 'vue-gauge';
 
 export default {
-  setup() {
-    const inputUsername = ref("");
-    const inputMessage = ref("");
+	components: { VueGauge },
+	data() {
+		return {
+			gaugeValue: 0
+		}
+	},
+	computed: {
+		gaugeOptions() {
+			return {
+				hasNeedle: true,
+				needleValue: this.gaugeValue,
+				needleColor: 'black',
+				arcColors: [
+				'rgb(61, 204, 91)',
+				'rgb(239, 214, 19)',
+				'rgb(255,165,0)',
+				'rgb(255, 84, 84)',
+				],
+				arcDelimiters: [25, 50, 75],
+				rangeLabel: ['0', '100'],
+				arcOverEffect: false,
+				needleStartValue: this.gaugeValue,
+				centralLabel: this.gaugeValue.toString(),
+			}
+		}
+	},
+	setup() {
+		const inputUsername = ref("");
+		const inputMessage = ref("");
 
-    const state = reactive({
-      username: "",
-      messages: [],
-      status: false
-    });
+		const state = reactive({
+		username: "",
+		messages: [],
+		status: false
+		});
 
-    const Login = () => {
-      if (inputUsername.value != "" || inputUsername.value != null) {
-        state.username = inputUsername.value;
-        inputUsername.value = "";
-        statusLoad();
-      }
-    }
+		const Login = () => {
+		if (inputUsername.value != "" || inputUsername.value != null) {
+			state.username = inputUsername.value;
+			inputUsername.value = "";
+			statusLoad();
+		}
+		}
 
-    const Logout = () => {
-      state.username = "";
-    }
+		const Logout = () => {
+		state.username = "";
+		}
 
-    const SetStatus = () => {
-      state.status = !state.status;
-      const statusRef = db.database().ref("status");
+		const SetStatus = () => {
+		state.status = !state.status;
+		const statusRef = db.database().ref("status");
 
-      const userStatus = {
-        username: state.username,
-        status: state.status
-      }
+		const userStatus = {
+			username: state.username,
+			status: state.status
+		}
 
-      statusRef.push(userStatus);
-    }
+		statusRef.push(userStatus);
+		}
 
-    const SendMessage = () => {
-      const messagesRef = db.database().ref("messages");
+		const SendMessage = () => {
+		const messagesRef = db.database().ref("messages");
 
-      if (inputMessage.value === "" || inputMessage.value === null) {
-        return;
-      }
+		if (inputMessage.value === "" || inputMessage.value === null) {
+			return;
+		}
 
-      const message = {
-        username: state.username,
-        content: inputMessage.value
-      }
+		const message = {
+			username: state.username,
+			content: inputMessage.value
+		}
 
-      messagesRef.push(message);
-      inputMessage.value = "";
-    }
+		messagesRef.push(message);
+		inputMessage.value = "";
+		}
 
-    onMounted(() => {
-      const messagesRef = db.database().ref("messages");
-      messagesRef.on('value', snapshot => {
-        const data = snapshot.val() ?? "";
-        let messages = [];
-        Object.keys(data).forEach(key => {
-          messages.push({
-            id: key,
-            username: data[key].username,
-            content: data[key].content
-          });
-        });
-        state.messages = messages;
-      });
-    });
+		onMounted(() => {
+		const messagesRef = db.database().ref("messages");
+		messagesRef.on('value', snapshot => {
+			const data = snapshot.val() ?? "";
+			let messages = [];
+			Object.keys(data).forEach(key => {
+			messages.push({
+				id: key,
+				username: data[key].username,
+				content: data[key].content
+			});
+			});
+			state.messages = messages;
+		});
+		});
 
-    const statusLoad = () => { 
-      const statusRef = db.database().ref("status");
-      statusRef.on('value', snapshot => {
-        const data = snapshot.val() ?? "";
-        let status = [];
-        Object.keys(data).forEach(key => {
-          status.push({
-            id: key,
-            status: data[key].status
-          });
-        });
+		const statusLoad = () => { 
+		const statusRef = db.database().ref("status");
+		statusRef.on('value', snapshot => {
+			const data = snapshot.val() ?? "";
+			let status = [];
+			Object.keys(data).forEach(key => {
+			status.push({
+				id: key,
+				status: data[key].status
+			});
+			});
 
-        const finalStatus = status.pop();
-        state.status = finalStatus ? finalStatus.status : false;
-      });
-    }
+			const finalStatus = status.pop();
+			state.status = finalStatus ? finalStatus.status : false;
+		});
+		}
 
-    return {
-      inputUsername,
-      Login,
-      state,
-      inputMessage,
-      SendMessage,
-      Logout,
-      SetStatus
-    }
-  }
+		return {
+		inputUsername,
+		Login,
+		state,
+		inputMessage,
+		SendMessage,
+		Logout,
+		SetStatus
+		}
+	}
 }
 </script>
 
@@ -285,12 +320,12 @@ export default {
 		}
 
 		.chat-box {
-			border-radius: 24px 24px 0px 0px;
+			border-radius: 24px;
 			background-color: #FFF;
 			box-shadow: 0px 0px 12px rgba(100, 100, 100, 0.2);
 			flex: 1 1 100%;
 			padding: 30px;
-
+			margin: 30px;
 			.message {
 				display: flex;
 				margin-bottom: 15px;
@@ -394,30 +429,31 @@ export default {
 }
 
 .btn {
-  cursor: pointer;
-  outline: 0;
-  display: inline-block;
-  font-weight: 400;
-  line-height: 1.5;
-  text-align: center;
-  border: 1px solid #fff;
-  padding: 6px 12px;
-  font-size: 1rem;
-  border-radius: 1.25rem;
-  transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-  color: #0d6efd;
-  border-color: #0d6efd;
+cursor: pointer;
+outline: 0;
+display: inline-block;
+font-weight: 400;
+line-height: 1.5;
+text-align: center;
+border: 1px solid #fff;
+padding: 6px 12px;
+font-size: 1rem;
+border-radius: 1.25rem;
+transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+color: #0d6efd;
+border-color: #0d6efd;
 }
 
 .btn:hover {
-  color: #fff;
-  background-color: #0d6efd;
-  border-color: #0d6efd;
+color: #fff;
+background-color: #0d6efd;
+border-color: #0d6efd;
 }
 
 .active {
-  color: #fff;
-  background-color: #0d6efd;
-  border-color: #0d6efd;
+color: #fff;
+background-color: #0d6efd;
+border-color: #0d6efd;
 }
 </style>
+  
