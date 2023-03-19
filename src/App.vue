@@ -27,21 +27,21 @@
 			
 			<section class="chat-box">
 				<div class="row">
-					<div class="col-2 vstack gap-3 p-3">
+					<div class="col-2 col-md-12 vstack gap-3 p-3">
 						<h3>Pump</h3>
 						<button class="btn" :class="valve_1_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_1_active" @click="setStatus($event)">Valve #1</button>
 						<button class="btn" :class="valve_2_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_2_active" @click="setStatus($event)">Valve #2</button>
 						<button class="btn" :class="valve_3_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_3_active" @click="setStatus($event)">Valve #3</button>
 						<button class="btn" :class="valve_4_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_4_active" @click="setStatus($event)">Valve #4</button>
 					</div>
-					<div class="col-2 vstack gap-3 p-3">
+					<div class="col-2 col-md-12 vstack gap-3 p-3">
 						<h3>Release</h3>
 						<button class="btn" :class="release_1_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="release_1_active" @click="setStatus($event)">Release #1</button>
 						<button class="btn" :class="release_2_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="release_2_active" @click="setStatus($event)">Release #2</button>
 						<button class="btn" :class="release_3_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="release_3_active" @click="setStatus($event)">Release #3</button>
 						<button class="btn" :class="release_4_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="release_4_active" @click="setStatus($event)">Release #4</button>
 					</div>
-					<div class="col-4 p-3 d-flex justify-content-center">
+					<div class="col-4 col-md-12 p-3 d-flex justify-content-center">
 						<div>
 							<h3 class="d-flex justify-content-center">Pump Power</h3>
 							<vue-gauge :refid="'type-unique-id-1'" :options="pumpOptions" :key="pumpValue"></vue-gauge>
@@ -50,7 +50,7 @@
 							<vue-gauge :refid="'type-unique-id-2'" :options="releaseOptions" :key="releaseValue"></vue-gauge>
 						</div>
 					</div>
-					<div class="col-4">
+					<div class="col-4 col-md-12">
 						<h3 class="d-flex justify-content-center">Back log</h3>
 						<div class="chat-box">
 							<div v-if="backlogData.length != 0">
@@ -101,7 +101,6 @@ import { reactive, onMounted, ref } from 'vue';
 import db from './db';
 import VueGauge from 'vue-gauge';
 import moment from 'moment';
-import ToastPlugin from 'vue-toast-notification';
 
 export default {
 	components: { VueGauge },
