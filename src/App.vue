@@ -29,17 +29,17 @@
 				<div class="row">
 					<div class="col-2 vstack gap-3 p-3">
 						<h3>Pump</h3>
-						<button class="btn" :class="valve_1_active ? 'btn-success' : 'btn-outline-success'" value="valve_1_active" @click="setStatus($event)">Valve #1</button>
-						<button class="btn" :class="valve_2_active ? 'btn-success' : 'btn-outline-success'" value="valve_2_active" @click="setStatus($event)">Valve #2</button>
-						<button class="btn" :class="valve_3_active ? 'btn-success' : 'btn-outline-success'" value="valve_3_active" @click="setStatus($event)">Valve #3</button>
-						<button class="btn" :class="valve_4_active ? 'btn-success' : 'btn-outline-success'" value="valve_4_active" @click="setStatus($event)">Valve #4</button>
+						<button class="btn" :class="valve_1_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_1_active" @click="setStatus($event)">Valve #1</button>
+						<button class="btn" :class="valve_2_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_2_active" @click="setStatus($event)">Valve #2</button>
+						<button class="btn" :class="valve_3_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_3_active" @click="setStatus($event)">Valve #3</button>
+						<button class="btn" :class="valve_4_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_4_active" @click="setStatus($event)">Valve #4</button>
 					</div>
 					<div class="col-2 vstack gap-3 p-3">
 						<h3>Release</h3>
-						<button class="btn" :class="release_1_active ? 'btn-success' : 'btn-outline-success'" value="release_1_active" @click="setStatus($event)">Release #1</button>
-						<button class="btn" :class="release_2_active ? 'btn-success' : 'btn-outline-success'" value="release_2_active" @click="setStatus($event)">Release #2</button>
-						<button class="btn" :class="release_3_active ? 'btn-success' : 'btn-outline-success'" value="release_3_active" @click="setStatus($event)">Release #3</button>
-						<button class="btn" :class="release_4_active ? 'btn-success' : 'btn-outline-success'" value="release_4_active" @click="setStatus($event)">Release #4</button>
+						<button class="btn" :class="release_1_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="release_1_active" @click="setStatus($event)">Release #1</button>
+						<button class="btn" :class="release_2_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="release_2_active" @click="setStatus($event)">Release #2</button>
+						<button class="btn" :class="release_3_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="release_3_active" @click="setStatus($event)">Release #3</button>
+						<button class="btn" :class="release_4_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="release_4_active" @click="setStatus($event)">Release #4</button>
 					</div>
 					<div class="col-4 p-3 d-flex justify-content-center">
 						<div>
