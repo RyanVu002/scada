@@ -29,10 +29,10 @@
 				<div class="row">
 					<div class="col-md-2 col-sm-12 vstack gap-3 p-3">
 						<h3>Pump</h3>
-						<button class="btn" :class="valve_1_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_1_active" @click="setStatus($event)">Valve #1</button>
-						<button class="btn" :class="valve_2_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_2_active" @click="setStatus($event)">Valve #2</button>
-						<button class="btn" :class="valve_3_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_3_active" @click="setStatus($event)">Valve #3</button>
-						<button class="btn" :class="valve_4_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_4_active" @click="setStatus($event)">Valve #4</button>
+						<button class="btn" :disabled="overHeat" :class="valve_1_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_1_active" @click="setStatus($event)">Valve #1</button>
+						<button class="btn" :disabled="overHeat" :class="valve_2_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_2_active" @click="setStatus($event)">Valve #2</button>
+						<button class="btn" :disabled="overHeat" :class="valve_3_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_3_active" @click="setStatus($event)">Valve #3</button>
+						<button class="btn" :disabled="overHeat" :class="valve_4_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_4_active" @click="setStatus($event)">Valve #4</button>
 					</div>
 					<div class="col-md-2 col-sm-12 vstack gap-3 p-3">
 						<h3>Release</h3>
@@ -45,7 +45,7 @@
 						<div>
 							<h3 class="d-flex justify-content-center">Pump Power</h3>
 							<vue-gauge :refid="'type-unique-id-1'" :options="pumpOptions" :key="pumpValue"></vue-gauge>
-							<button type="button" class="btn btn-danger" v-if="this.overHeat" @click="emergencyAction()">Over heat! - Shut down system</button>
+							<button type="button" class="btn btn-danger blink_emergency" v-if="this.overHeat" @click="emergencyAction()">Over heat! - Shut down system</button>
 							<h3 class="d-flex justify-content-center">Release Power</h3>
 							<vue-gauge :refid="'type-unique-id-2'" :options="releaseOptions" :key="releaseValue"></vue-gauge>
 						</div>
@@ -615,6 +615,16 @@ export default {
 	color: #fff;
 	background-color: #0d6efd;
 	border-color: #0d6efd;
+	}
+
+	.blink_emergency {
+		animation: blinker 1s linear infinite;
+		}
+
+	@keyframes blinker {
+		50% {
+			opacity: 0;
+		}
 	}
 
 	#app {
