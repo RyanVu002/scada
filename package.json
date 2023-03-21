@@ -17,7 +17,8 @@
     "moment": "^2.29.4",
     "sass": "^1.59.3",
     "vue": "^3.2.47",
-    "vue-gauge": "^1.0.3"
+    "vue-gauge": "^1.0.3",
+    "vue-timer-hook": "^1.0.66"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",

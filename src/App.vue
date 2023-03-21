@@ -29,10 +29,10 @@
 				<div class="row">
 					<div class="col-md-2 col-sm-12 vstack gap-3 p-3">
 						<h3>Pump</h3>
-						<button class="btn" :disabled="overHeat" :class="valve_1_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_1_active" @click="setStatus($event)">Valve #1</button>
-						<button class="btn" :disabled="overHeat" :class="valve_2_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_2_active" @click="setStatus($event)">Valve #2</button>
-						<button class="btn" :disabled="overHeat" :class="valve_3_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_3_active" @click="setStatus($event)">Valve #3</button>
-						<button class="btn" :disabled="overHeat" :class="valve_4_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_4_active" @click="setStatus($event)">Valve #4</button>
+						<button class="btn" :class="valve_1_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_1_active" @click="setStatus($event)">Valve #1</button>
+						<button class="btn" :class="valve_2_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_2_active" @click="setStatus($event)">Valve #2</button>
+						<button class="btn" :class="valve_3_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_3_active" @click="setStatus($event)">Valve #3</button>
+						<button class="btn" :class="valve_4_active ? 'text-dark btn-success' : 'text-dark btn-outline-success'" value="valve_4_active" @click="setStatus($event)">Valve #4</button>
 					</div>
 					<div class="col-md-2 col-sm-12 vstack gap-3 p-3">
 						<h3>Release</h3>
@@ -126,7 +126,10 @@ export default {
 			release_3_active: false,
 			release_4_active: false,
 			defaultPowerPercent: 25,
-			overHeat: false
+			overHeat: false,
+			defaultCountDown: 10,
+			countDown: 10,
+			timer: null,
 		}
 	},
 	computed: {
@@ -231,10 +234,13 @@ export default {
 	watch: {
 		pumpValue() {
 			if (this.pumpValue === 100) {
-				this.overHeat = true;
+				this.startCountDown();
 			}
-			else {
-				this.overHeat = false;
+		},
+		countDown() {
+			if (this.countDown === 0) {
+				this.overHeat = true;
+				this.stopCountDown();
 			}
 		}
 	},
@@ -274,6 +280,17 @@ export default {
 					this.setStatus(e, true);
 				}
 			});
+			this.overHeat = false;
+		},
+		startCountDown() {
+			this.countDown = this.defaultCountDown;
+			this.timer = setInterval( () => {
+				this.countDown --;
+			}, 1000);
+		},
+		stopCountDown() {
+			clearInterval(this.timer);
+			this.countDown = 0;
 		}
 	},
 	setup() {
