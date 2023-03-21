@@ -214,6 +214,22 @@ export default {
 			this.backlog = backlog;
 		});
 
+		const overHearRef = db.database().ref("overHeat");
+		overHearRef.on('value', snapshot => {
+			const data = snapshot.val() ?? "";
+			let backlog = [];
+			Object.keys(data).forEach(key => {
+			backlog.push({
+				id: key,
+				username: data[key].username,
+				overHeat: data[key].overHeat,
+				modifiedAt: data[key].modifiedAt
+			});
+			});
+			console.log(backlog)
+			this.overHeat = backlog.pop()?.overHeat ?? false;
+		});
+
 		this.valveReleaseList.forEach(el => {
 			const elRef = db.database().ref(el);
 			elRef.on('value', snapshot => {
@@ -241,6 +257,9 @@ export default {
 				this.overHeat = true;
 				this.stopCountDown();
 			}
+		},
+		overHeat() {
+			this.saveOverHeat();
 		}
 	},
 	methods: {
@@ -267,6 +286,16 @@ export default {
 			}
 			logRef.push(log);
 		},
+		saveOverHeat() {
+			var current = moment().format("DD/MM/YYYY hh:mm:ss a").toString();
+			const overHeatRef = db.database().ref("overHeat");
+			const status = {
+				username: this.state.username,
+				overHeat: this.overHeat,
+				modifiedAt: current
+			}
+			overHeatRef.push(status);
+		},
 		emergencyAction() {
 			this.valveReleaseList.forEach(e => {
 				if (e.includes("valve")) {
@@ -280,6 +309,7 @@ export default {
 				}
 			});
 			this.overHeat = false;
+			this.saveOverHeat();
 		},
 		startCountDown() {
 			this.timer = setInterval( () => {
