@@ -127,8 +127,7 @@ export default {
 			release_4_active: false,
 			defaultPowerPercent: 25,
 			overHeat: false,
-			defaultCountDown: 10,
-			countDown: 10,
+			countDown: 0,
 			timer: null,
 		}
 	},
@@ -238,7 +237,7 @@ export default {
 			}
 		},
 		countDown() {
-			if (this.countDown === 0) {
+			if (this.countDown === 10) {
 				this.overHeat = true;
 				this.stopCountDown();
 			}
@@ -283,9 +282,8 @@ export default {
 			this.overHeat = false;
 		},
 		startCountDown() {
-			this.countDown = this.defaultCountDown;
 			this.timer = setInterval( () => {
-				this.countDown --;
+				this.countDown ++;
 			}, 1000);
 		},
 		stopCountDown() {
