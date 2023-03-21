@@ -4,7 +4,7 @@
 		<div class="view login" v-if="state.username === '' || state.username === null">
 			<form class="login-form"  @submit.prevent="Login">
 				<div class="form-inner">
-				<h1>Login to SCADA data live data</h1>
+				<h1>Login to SCADA demo live data</h1>
 				<label for="username">Username</label>
 				<input 
 					type="text" 
@@ -226,7 +226,6 @@ export default {
 				modifiedAt: data[key].modifiedAt
 			});
 			});
-			console.log(backlog)
 			this.overHeat = backlog.pop()?.overHeat ?? false;
 		});
 
